@@ -1,0 +1,211 @@
+Book Class:
+=============
+
+package com.entity;
+import java.io.Serializable;
+public class Book implements Serializable{
+    
+	  private int bookId;
+	  private String booktitle;
+	  private float bookprice;
+	  private String grade;
+	public int getbookId() {
+		return bookId;
+	}
+	public void setbookId(int bookId) {
+		this.bookId = bookId;
+	}
+	public String getbooktitle() {
+		return booktitle;
+	}
+	public void setbooktitle(String booktitle) {
+		this.booktitle = booktitle;
+	}
+	public float getbookprice() {
+		return bookprice;
+	}
+	public void setbookprice(float bookprice) {
+		this.bookprice = bookprice;
+	}
+	public String getgrade() {
+		return grade;
+	}
+	public void setgrade(String grade) {
+		this.grade = grade;
+	}	  
+}
+
+
+
+
+Book Service:
+===============
+
+package com.service;
+import com.dao.BookDAO;
+import com.entity.Book;
+
+public class BookService {
+	public int addBookService(int bookId, String booktitle, float bookprice) {
+		String grade="";
+		 if(bookprice <= 500)
+		 {
+			 grade = "C";
+		 }
+		 else if(bookprice <= 900)
+		 {
+			 grade = "B";
+		 }
+		 else
+		 {
+			 grade = "A";
+		 }
+		
+		 BookDAO b = new BookDAO(); 
+		 Book book = new Book(); 
+		
+		 book.setbookId(bookId);
+		 book.setbooktitle(booktitle);
+		 book.setbookprice(bookprice);
+		 book.setgrade(grade);
+		 
+		 int Result = 0;
+		 try
+		 {
+			 Result = b.addBook(book);
+			 return Result; 
+		 }
+		 catch(Exception bo)
+		 {
+			 System.out.println(bo.toString());
+			 return 0;
+		 }
+	}
+
+}
+
+
+
+
+BookDao:
+==========
+ 
+package com.dao;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.ArrayList;
+
+import com.entity.Book;
+
+public class BookDAO {
+	public int addBook(Book book) 
+	  {	  Connection connect = null;
+		  PreparedStatement stmt = null;
+		  try
+		  {  
+			  connect=BookDatabase.getConnection(); 
+			  
+			  String insert = "insert into book values(?,?,?,?)";
+			 
+			  stmt = connect.prepareStatement(insert);
+			  stmt.setInt(1,book.getbookId());
+			  stmt.setString(2,book.getbooktitle());
+			  stmt.setFloat(3,book.getbookprice());
+			  stmt.setString(4,book.getgrade());
+			  int Count = stmt.executeUpdate(); 
+			       
+			  connect.close();
+			  return Count; 
+		  }
+		  catch(Exception e)
+		  {
+			  System.out.println(e.toString());
+			  return 0;
+		  }
+	  }
+	     
+	  public ArrayList getBookDetailsById(int bookId) throws Exception {
+		  
+					Connection conn = null;
+					PreparedStatement stmt = null;
+					ResultSet rs = null;
+					
+					conn = BookDatabase.getConnection();
+					
+			    String select ="Select booktitle,bookprice from book where bookId=?";
+					  
+					  
+					  stmt = conn.prepareStatement(select);
+					  stmt.setInt(1,bookId);
+					  rs = stmt.executeQuery();
+					  
+					  ArrayList res = new ArrayList();
+					  if(rs.next())
+					  {
+						  res.add(rs.getString(1));
+						  res.add(rs.getString(2));
+						  
+					  }
+					  else
+					  {
+						  res.add("Invalid Id inserted");
+					  }
+					  return res;
+					
+				}
+}
+
+
+
+
+
+Book Database:
+================
+
+package com.dao;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+
+public class BookDatabase {
+	public static Connection getConnection()  throws Exception {
+				
+				 String driverName = "org.postgresql.Driver";
+				  Class.forName(driverName);
+				  Connection conn = DriverManager.getConnection("jdbc:postgresql://localhost/himank","honey","himank123");				
+				return conn;
+			  }
+}
+
+
+
+
+
+
+Book UI:
+==========
+
+package com.ui;
+import java.util.Scanner;
+import com.service.BookService;
+
+public class BookUI {
+	public static void main(String[] args)   
+	{	int bookId=0;
+		String booktitle="";
+		float bookprice=0;
+		Scanner sc=new Scanner(System.in);
+		System.out.println("Enter Book Id");
+			bookId = sc.nextInt();
+			System.out.println("Enter Book Title");
+			booktitle = sc.next();	
+			System.out.println("Enter Book price");
+			bookprice = sc.nextFloat();
+			BookService bs = new BookService();
+			   int update = bs.addBookService(bookId, booktitle, bookprice); 
+	 	
+			System.out.println("Book record inserted Successfully:"+update);
+	} 
+}
